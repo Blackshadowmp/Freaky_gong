@@ -1,0 +1,3 @@
+import os
+DISCORD_API_KEY=os.getenv("DISCORD_API_KEY")
+YOUTUBE_API_KEY=os.getenv("YOUTUBE_API_KEY")

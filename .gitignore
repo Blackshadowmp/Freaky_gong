@@ -21,6 +21,5 @@ Thumbs.db
 .idea/
 *.swp
 
-# Project-specific
-config/settings.py
+# Project-specific files
 data/cookies.txt
