@@ -3,11 +3,11 @@ from discord.ext import commands
 from ..core import bot
 import sys
 import os
-
-current_song_meta = None
+from .playback import get_current_song_meta
 
 @bot.slash_command(name='current_song', description='Gives title of current song playing on the bot')
 async def current_song(ctx: discord.ApplicationContext):
+    current_song_meta = get_current_song_meta()
     if current_song_meta is not None:
         embed = discord.Embed(
             title=current_song_meta['title'],

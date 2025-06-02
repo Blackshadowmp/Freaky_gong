@@ -57,10 +57,10 @@ async def skip(ctx: discord.ApplicationContext):
         await ctx.respond('No song is currently playing!', ephemeral=True)
 
 async def handle_play(ctx: discord.ApplicationContext, query: str):
-    global current_song_meta, session
+    global session
 
     if 'list=' in query:
-        ydl_opts = {'quiet': True, 'extract_flat': 'in_playlist'}
+        ydl_opts = {'quiet': True, 'extract_flat': 'in_playlist',"format": "bestaudio/best",'cookiefile': 'data/cookies.txt',}
         playlist_info = await extract_video_info(query, ydl_opts)
         videos = playlist_info.get('entries', [])
         if not videos:
@@ -75,7 +75,7 @@ async def handle_play(ctx: discord.ApplicationContext, query: str):
 
     elif query.startswith('http://') or query.startswith('https://'):
         song_queue.append(query)
-        ydl_opts = {'quiet': True, 'extract_flat': True}
+        ydl_opts = {'quiet': True, 'extract_flat': True,"format": "bestaudio/best",'cookiefile': 'data/cookies.txt',}
         info = await extract_video_info(query, ydl_opts)
         await add_info(ctx, info=info,query=query)
 
@@ -184,3 +184,7 @@ async def play_next(ctx: discord.ApplicationContext):
 
     await bot.change_presence(status=discord.Status.online, activity=discord.Activity(type=discord.ActivityType.listening, name=metadata['title']))
     await tien_edit_check(ctx=ctx,chanel_name=metadata['channel_title'], video_name=info['title'])
+    
+def get_current_song_meta():
+    global current_song_meta
+    return current_song_meta if current_song_meta else None

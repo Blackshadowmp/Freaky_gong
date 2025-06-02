@@ -7,7 +7,6 @@ from .playback import song_queue_metadata, song_queue
 @bot.slash_command(name='queue', description='List songs in the queue')
 async def queue(ctx: discord.ApplicationContext):
     await ctx.response.defer()
-    print(song_queue_metadata)
     if song_queue_metadata:
         embed = discord.Embed(
             title='Current Song Queue',
