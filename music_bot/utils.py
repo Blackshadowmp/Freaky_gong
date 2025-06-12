@@ -6,15 +6,23 @@ import discord
 async def extract_video_info(url, ydl_opts):
     def run_ydl():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            _ = info.get('url', None)  # Force URL eval
+            try:
+                info = ydl.extract_info(url, download=False)
+                _ = info.get('url', None)  # Force URL eval
+            except :
+                return None
         return info
 
     return await asyncio.to_thread(run_ydl)
 
 def currently_playing(ctx: discord.ApplicationContext) -> bool:
     return (ctx.guild.voice_client and ctx.guild.voice_client.is_playing())
-
+def is_valid(info):
+    print(f'info: {info}')
+    if info is None:
+        return False
+    
+    return True
 async def tien_edit_check(ctx: discord.ApplicationContext, chanel_name: str, video_name: str):
     keywords = [
     '3daysgrace', 'three days grace', 'three daysgrace', '3 days grace',

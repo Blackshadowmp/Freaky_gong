@@ -30,7 +30,7 @@ async def restart(ctx: discord.ApplicationContext):
 
         embed = discord.Embed(
             title=f'{ctx.user.display_name} has restarted the bot',
-            color=discord.Color.brand_red()
+            color=discord.Color.brand_red
         )
         embed.set_thumbnail(url=ctx.user.display_avatar.url)
         await ctx.followup.send(embed=embed)

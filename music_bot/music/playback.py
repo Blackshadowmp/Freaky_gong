@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 from ..core import bot
-from ..utils import extract_video_info, currently_playing, tien_edit_check
-from ..views import VideoSelect #, PlaylistButtons
+from ..utils import extract_video_info, currently_playing, tien_edit_check, is_valid
 from config.settings import YOUTUBE_API_KEY
 
 import asyncio
@@ -58,9 +57,27 @@ async def skip(ctx: discord.ApplicationContext):
 
 async def handle_play(ctx: discord.ApplicationContext, query: str):
     global session
-
+    ydl_opts = {
+        'quiet': True,
+        'format': 'bestaudio[ext=m4a]/bestaudio/best',
+        'cookiefile': 'data/cookies.txt',
+        'force_insecure_cookies': True,
+        'default_search': 'ytsearch',
+        'skip_download': True,
+        'ignoreerrors': True,
+        'extractor_args': {
+            'youtube': ['player_client=web_safari,web_embedded']
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate'
+        },
+    }
     if 'list=' in query:
-        ydl_opts = {'quiet': True, 'extract_flat': 'in_playlist',"format": "bestaudio/best",'cookiefile': 'data/cookies.txt',}
+        
+
         playlist_info = await extract_video_info(query, ydl_opts)
         videos = playlist_info.get('entries', [])
         if not videos:
@@ -75,8 +92,10 @@ async def handle_play(ctx: discord.ApplicationContext, query: str):
 
     elif query.startswith('http://') or query.startswith('https://'):
         song_queue.append(query)
-        ydl_opts = {'quiet': True, 'extract_flat': True,"format": "bestaudio/best",'cookiefile': 'data/cookies.txt',}
         info = await extract_video_info(query, ydl_opts)
+        if is_valid(info) is False:
+            await ctx.followup.send('Invalid video URL or unable to extract information.', ephemeral=True)
+            return
         await add_info(ctx, info=info,query=query)
 
     else:
@@ -104,9 +123,13 @@ async def handle_play(ctx: discord.ApplicationContext, query: str):
                 color=discord.Color.dark_orange()
             )
             embed.set_thumbnail(url=ctx.user.display_avatar.url)
-
+            from ..views import VideoSelect  # import here to avoid circular import
             view = discord.ui.View()
-            view.add_item(VideoSelect(ctx, videos, song_queue, song_queue_metadata))
+            video_select = VideoSelect(ctx, videos, song_queue, song_queue_metadata)
+            if video_select is None:
+                await ctx.followup.send("No playable videos available.", ephemeral=True)
+                return
+            view.add_item(video_select)
 
             await ctx.followup.send(embed=embed, view=view)
 
@@ -145,10 +168,24 @@ async def play_next(ctx: discord.ApplicationContext):
     current_song_meta = metadata
 
     ydl_opts = {
-        'format': 'bestaudio/best',
         'quiet': True,
+        'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'cookiefile': 'data/cookies.txt',
+        'force_insecure_cookies': True,
+        'default_search': 'ytsearch',
+        'skip_download': True,
+        'ignoreerrors': True,
+        'extractor_args': {
+            'youtube': ['player_client=web_safari,web_embedded']
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate'
+        },
     }
+
 
     info = await extract_video_info(url, ydl_opts)
     stream_url = info['url']
