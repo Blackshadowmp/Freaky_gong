@@ -1,17 +1,14 @@
 import discord
 from discord.ext import commands
 from ..core import bot
-from ..utils import extract_video_info, currently_playing, tien_edit_check, is_valid
+from ..utils import extract_video_info, currently_playing, tien_edit_check, is_valid, get_session
 from config.settings import YOUTUBE_API_KEY
-
 import asyncio
 import html
-import aiohttp
 
 song_queue_metadata = []
 song_queue = []
 current_song_meta = None
-session: aiohttp.ClientSession | None = None
 
 @bot.slash_command(name='play', description='Add a song to the queue and play it.')
 async def play(ctx: discord.ApplicationContext, query: str):
@@ -20,7 +17,7 @@ async def play(ctx: discord.ApplicationContext, query: str):
     if not ctx.guild.voice_client:
         if ctx.user.voice:
             try:
-                await asyncio.sleep(1)
+                await asyncio.sleep(.25)
                 await ctx.user.voice.channel.connect()
             except Exception as e:
                 if not ctx.response.is_done():
@@ -56,7 +53,7 @@ async def skip(ctx: discord.ApplicationContext):
         await ctx.respond('No song is currently playing!', ephemeral=True)
 
 async def handle_play(ctx: discord.ApplicationContext, query: str):
-    global session
+    session = get_session()
     ydl_opts = {
         'quiet': True,
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
@@ -100,7 +97,8 @@ async def handle_play(ctx: discord.ApplicationContext, query: str):
 
     else:
         if session is None or session.closed:
-            session = aiohttp.ClientSession()
+            print('[handle_play] aiohttp session is not available, start up failed?')
+            session = get_session() 
 
         search_url = (
             f'https://www.googleapis.com/youtube/v3/search'

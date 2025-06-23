@@ -1,9 +1,7 @@
 import asyncio
-import aiohttp
 import discord
 from .core import bot
-
-session: aiohttp.ClientSession | None = None
+from .utils import get_session, close_session
 
 def handle_sigint():
     loop = asyncio.get_event_loop()
@@ -12,9 +10,9 @@ def handle_sigint():
 async def graceful_shutdown():
     print('Shutting down gracefully...')
 
-    global session
+    session = get_session()
     if session and not session.closed:
-        await session.close()
+        await close_session()
         print('[Shutdown] aiohttp session closed')
 
     for vc in bot.voice_clients:
@@ -27,6 +25,7 @@ async def graceful_shutdown():
 
 @bot.event
 async def on_shutdown():
+    session = get_session()
     if session and not session.closed:
         await session.close()
     for vc in bot.voice_clients:
@@ -36,10 +35,10 @@ async def on_shutdown():
 
 @bot.event
 async def on_ready():
-    global session
+    session = get_session()
     if session is None or session.closed:
-        session = aiohttp.ClientSession()
-
+        print('[on_ready] aiohttp session is not available, start up failed?')
+        return
     await bot.change_presence(
         status=discord.Status.idle,
         activity=discord.Activity(type=discord.ActivityType.listening, name='Nothing')

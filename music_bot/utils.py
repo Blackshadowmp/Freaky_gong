@@ -1,6 +1,21 @@
 import asyncio
 import yt_dlp
 import discord
+import aiohttp
+
+session: aiohttp.ClientSession | None = None
+
+def get_session() -> aiohttp.ClientSession:
+    global session
+    if session is None or session.closed:
+        session = aiohttp.ClientSession()
+    return session
+
+async def close_session():
+    global session
+    if session and not session.closed:
+        await session.close()
+        print('[Shutdown] aiohttp session closed')
 
 # Extract video info using yt-dlp asynchronously
 async def extract_video_info(url, ydl_opts):
