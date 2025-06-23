@@ -10,10 +10,7 @@ def handle_sigint():
 async def graceful_shutdown():
     print('Shutting down gracefully...')
 
-    session = get_session()
-    if session and not session.closed:
-        await close_session()
-        print('[Shutdown] aiohttp session closed')
+    await close_session()
 
     for vc in bot.voice_clients:
         if vc.is_playing():
@@ -25,9 +22,7 @@ async def graceful_shutdown():
 
 @bot.event
 async def on_shutdown():
-    session = get_session()
-    if session and not session.closed:
-        await session.close()
+    await close_session()
     for vc in bot.voice_clients:
         if vc.is_playing():
             vc.stop()

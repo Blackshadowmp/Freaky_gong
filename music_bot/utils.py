@@ -6,13 +6,16 @@ import aiohttp
 session: aiohttp.ClientSession | None = None
 
 def get_session() -> aiohttp.ClientSession:
+    print('Getting aiohttp session')
     global session
     if session is None or session.closed:
         session = aiohttp.ClientSession()
+    print(f'Aiohttp session is ready: {session}')
     return session
 
 async def close_session():
     global session
+    print(f'Closing aiohttp session: {session}')
     if session and not session.closed:
         await session.close()
         print('[Shutdown] aiohttp session closed')
